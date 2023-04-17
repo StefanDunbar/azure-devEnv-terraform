@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "=2.97.0"  #Set the version of azurevm
+      version = "=2.97.0" #Set the version of azurevm
     }
   }
 }
@@ -12,8 +12,8 @@ provider "azurerm" {
 }
 #Create Azure Resource Group
 resource "azurerm_resource_group" "aztf-rg" {
-  name     = "azure-devEnv-terraform-rg"
-  location = "UK West"  #Set this to the location you want to create your Dev Env
+  name     = var.resource_group
+  location = "UK West" #Set this to the location you want to create your Dev Env
 
   tags = {
     environment = "dev"
@@ -21,7 +21,7 @@ resource "azurerm_resource_group" "aztf-rg" {
 }
 #Create Azure Virtual Network
 resource "azurerm_virtual_network" "aztf-vn" {
-  name                = "azure-devEnv-terraform-network"
+  name                = "${var.resource_group}-vn"
   resource_group_name = azurerm_resource_group.aztf-rg.name
   location            = azurerm_resource_group.aztf-rg.location
   address_space       = ["10.123.0.0/16"]
@@ -32,14 +32,14 @@ resource "azurerm_virtual_network" "aztf-vn" {
 }
 #Create Subnet for Virtual Network
 resource "azurerm_subnet" "aztf-subnet" {
-  name                 = "azure-devEnv-terraform-subnet"
+  name                 = "${var.resource_group}-subnet"
   resource_group_name  = azurerm_resource_group.aztf-rg.name
   virtual_network_name = azurerm_virtual_network.aztf-vn.name
   address_prefixes     = ["10.123.1.0/24"]
 }
 #Create Network Security Group - Will be assigned to Subnet later
 resource "azurerm_network_security_group" "aztf-nsg" {
-  name                = "azure-devEnv-terraform-nsg"
+  name                = "${var.resource_group}-nsg"
   resource_group_name = azurerm_resource_group.aztf-rg.name
   location            = azurerm_resource_group.aztf-rg.location
 
@@ -49,14 +49,14 @@ resource "azurerm_network_security_group" "aztf-nsg" {
 }
 #Create Network Security Rule on NSG - Allowing access from your IP only
 resource "azurerm_network_security_rule" "aztf-dev-rule" {
-  name                        = "azure-devEnv-terraform-dev-rule"
+  name                        = "${var.resource_group}-dev-rule"
   priority                    = 100
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefix       = "${var.personal_ip}"  #Your IP declared as variable in variables.tf
+  source_address_prefix       = var.personal_ip #Your IP declared as variable in variables.tf
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.aztf-rg.name
   network_security_group_name = azurerm_network_security_group.aztf-nsg.name
@@ -68,7 +68,7 @@ resource "azurerm_subnet_network_security_group_association" "aztf-nsga" {
 }
 #Generate Public IP - set to be Dynamic
 resource "azurerm_public_ip" "aztf-ip" {
-  name                = "azure-devEnv-terraform-ip"
+  name                = "${var.resource_group}-ip"
   resource_group_name = azurerm_resource_group.aztf-rg.name
   location            = azurerm_resource_group.aztf-rg.location
   allocation_method   = "Dynamic"
@@ -79,7 +79,7 @@ resource "azurerm_public_ip" "aztf-ip" {
 }
 #Create NIC - Use previously generated public IP
 resource "azurerm_network_interface" "aztf-nic" {
-  name                = "azure-devEnv-terraform-nic"
+  name                = "${var.resource_group}-nic"
   resource_group_name = azurerm_resource_group.aztf-rg.name
   location            = azurerm_resource_group.aztf-rg.location
 
@@ -96,7 +96,7 @@ resource "azurerm_network_interface" "aztf-nic" {
 }
 #Create VM - Assign NIC from above
 resource "azurerm_linux_virtual_machine" "aztf-vm" {
-  name                = "azure-devEnv-terraform-vm"
+  name                = "${var.resource_group}-vm"
   resource_group_name = azurerm_resource_group.aztf-rg.name
   location            = azurerm_resource_group.aztf-rg.location
   size                = "Standard_B1s"
@@ -105,11 +105,11 @@ resource "azurerm_linux_virtual_machine" "aztf-vm" {
     azurerm_network_interface.aztf-nic.id,
   ]
 
-  custom_data = filebase64("customdata.tpl")  #Run contents of customdata.tpl on startup (In this case it installs Docker)
+  custom_data = filebase64("customdata.tpl") #Run contents of customdata.tpl on startup (In this case it installs Docker)
 
   admin_ssh_key {
     username   = "adminuser"
-    public_key = file("~/.ssh/aztf-key.pub")  #Specify where to find public SSH key (This needs to be generated locally) so that we can connect via SSH
+    public_key = file("~/.ssh/aztf-key.pub") #Specify where to find public SSH key (This needs to be generated locally) so that we can connect via SSH
   }
 
   os_disk {
@@ -126,11 +126,11 @@ resource "azurerm_linux_virtual_machine" "aztf-vm" {
   #Run script 'linux-ssh-script.tpl' locally (configuration script allowing us to use remote SSH extension with vscode)
   provisioner "local-exec" {
     command = templatefile("${var.host_os}-ssh-script.tpl", { #Our host_os variable is set in terraform.tfvars
-      hostname     = self.public_ip_address,  #Grabs the public IP of the VM we are creating to use in our script
+      hostname     = self.public_ip_address,                  #Grabs the public IP of the VM we are creating to use in our script
       user         = "adminuser",
       identityfile = "~/.ssh/aztf-key"
     })
-    interpreter = var.host_os == "linux" ? ["bash", "-c"] : ["Powershell", "-Command"]  #Example of Conditional Expression (condition ? true val : false val)
+    interpreter = var.host_os == "linux" ? ["bash", "-c"] : ["Powershell", "-Command"] #Example of Conditional Expression (condition ? true val : false val)
   }
 
   tags = {

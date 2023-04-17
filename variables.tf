@@ -4,5 +4,10 @@ variable "host_os" {
 
 variable "personal_ip" {
   type    = string
-  default = "*" #Make sure the replace the * with your public IP so that only you can access your VM
+  default = "*" #Replace the * with your public IP so that only you can access your VM
+}
+
+variable "resource_group" {
+  type    = string
+  default = "" #Enter a unique name for your resource group !It won't work if it isn't unique!
 }
