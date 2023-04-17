@@ -1,5 +1,5 @@
 # azure-devEnv-terraform
-Creating a Dev Environment in Azure using Terraform (IaC)
+Creating a Linux-based Dev Environment in Azure using Terraform (IaC)
 
 - Open in VS Code
 - Add 'Terraform extension'
