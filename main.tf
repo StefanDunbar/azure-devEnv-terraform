@@ -12,7 +12,7 @@ provider "azurerm" {
 }
 #Create Azure Resource Group
 resource "azurerm_resource_group" "aztf-rg" {
-  name     = var.resource_group
+  name     = "${var.resource_group}"
   location = "UK West" #Set this to the location you want to create your Dev Env
 
   tags = {
