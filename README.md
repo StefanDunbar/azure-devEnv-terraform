@@ -12,3 +12,5 @@ Creating a, Linux-based, Dev Environment in Azure using Terraform (IaC)
   - Run 'Terraform init'
   - Run 'Terraform plan' to see what actions will be carried out
   - Run 'Terraform apply' to execute the creation of your Dev Env
+- Once you are done you can delete it all with the following command:
+  - 'Terraform destroy -auto-approve'
