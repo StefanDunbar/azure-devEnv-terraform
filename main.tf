@@ -12,7 +12,7 @@ provider "azurerm" {
 }
 #Create Azure Resource Group
 resource "azurerm_resource_group" "aztf-rg" {
-  name     = "${var.resource_group}"
+  name     = var.resource_group
   location = "UK West" #Set this to the location you want to create your Dev Env
 
   tags = {
@@ -56,7 +56,7 @@ resource "azurerm_network_security_rule" "aztf-dev-rule" {
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefix       = "${var.personal_ip}" #Your IP declared as variable in variables.tf
+  source_address_prefix       = var.personal_ip #Your IP declared as variable in variables.tf
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.aztf-rg.name
   network_security_group_name = azurerm_network_security_group.aztf-nsg.name
