@@ -4,7 +4,7 @@ Creating a, Linux-based, Dev Environment in Azure using Terraform (IaC)
 - Open in VS Code
 - Add 'Terraform' extension
 - Add 'Remote SSH' extension
-- Make sure to update 'variables.tf' file with your public IP and a unique resource group name !It won't work without these!
+- Make sure to update 'variables.tf' file with your public IP and a unique Resource Group name !It won't work without these!
 - Using VS Code terminal:
   - Run 'az login' and continue to login to your Azure account (Alternatively you can run 'az login --use-device-code)
   - Run 'az account show' (This is to confirm you have logged in, you should see your account details)
